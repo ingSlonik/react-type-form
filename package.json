@@ -1,0 +1,50 @@
+{
+    "name": "type-form",
+    "version": "0.1.0",
+    "description": "Type safe react form",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "tsc",
+        "example": "webpack serve"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@types/lodash": "^4.14.168",
+        "@types/react": "^17.0.0",
+        "@types/react-dom": "^17.0.0",
+        "@typescript-eslint/eslint-plugin": "^4.14.2",
+        "@typescript-eslint/parser": "^4.14.2",
+        "eslint": "^7.19.0",
+        "eslint-plugin-react": "^7.22.0",
+        "eslint-plugin-react-hooks": "^4.2.0",
+        "react-dom": "^17.0.1",
+        "ts-loader": "^8.0.14",
+        "typescript": "^4.1.3",
+        "webpack": "^5.20.0",
+        "webpack-cli": "^4.5.0",
+        "webpack-dev-server": "^3.11.2"
+    },
+    "dependencies": {
+        "lodash": "^4.17.20",
+        "moment": "^2.29.1",
+        "react": "^17.0.1"
+    },
+    "keywords": [
+        "react",
+        "form",
+        "forms",
+        "TypeScript",
+        "safe",
+        "type safe"
+    ],
+    "author": "Filip Paulů <ing.fenix@seznam.cz>",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ingSlonik/type-form.git"
+    },
+    "bugs": {
+        "url": "https://github.com/ingSlonik/type-form/issues"
+    }
+}
