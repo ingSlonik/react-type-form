@@ -9,6 +9,10 @@ module.exports = {
                 use: "ts-loader",
                 exclude: /node_modules/,
             },
+            {
+                test: /\.s[ac]ss$/i,
+                use: [ "style-loader", "css-loader", "sass-loader" ],
+            },
         ],
     },
     mode: "development",
@@ -21,5 +25,5 @@ module.exports = {
     },
     devServer: {
         contentBase: path.join(__dirname, "examples"),
-    }
+    },
 };

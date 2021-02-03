@@ -2,11 +2,12 @@
 
 Type safe react form.
 
-> :warning: This is just `alpha` version.
+> :warning: TThis is `alpha` version at this moment. For production use library as `formik`. However, I welcome you to try this library and leave the issues.
 
 ## Main motivation
 
 - Type safe form.
+  - No technical mistakes.
   - Full support of IDE intellisense.
 - Less code.
 
@@ -23,9 +24,34 @@ This package is inspired by `formik`.
 - [ ] v1.0.0
 - [ ] React native
 
+## Get started
+
+### Install
+
+```
+$ npm install --save type-form
+```
+
+### Import
+
+```jsx
+import { TypeForm } from "type-form";
+```
+
+### Styles
+
+> Optional
+
+Include basic styles of `type-form` inputs.
+It will not affect your styling.
+
+```jsx
+import "type-form/styles.css";
+```
+
 ## Examples
 
-In folder examples.
+In folder `examples`.
 
 ```
 $ npm run example -- --entry ./examples/Inputs.tsx

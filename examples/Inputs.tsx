@@ -1,6 +1,8 @@
 import { render } from "react-dom";
 import React from "react";
 
+import "../src/styles.scss";
+
 import { TypeForm } from "../src";
 
 function InputsExample() {
