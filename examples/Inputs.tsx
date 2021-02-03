@@ -10,11 +10,12 @@ function InputsExample() {
                 name: "",
                 age: 25,
                 date: new Date(),
-                equipment: ["Bread"],
+                car: "A1",
+                equipment: [ "Bread" ],
                 confirm: false,
             }}
             onSubmit={async values => {
-                console.log({ values });
+                // await send form...
                 return "Sent";
             }}
         >
@@ -23,6 +24,11 @@ function InputsExample() {
                     <Input.Name />
                     <Input.Age min={18} />
                     <Input.Date />
+                    <Input.Car.Select options={[
+                        { value: "A1", text: "Škoda" },
+                        { value: "A2", text: "WV" },
+                        { value: "A3", text: "BMW" },
+                    ]} />
                     <Input.Equipment>
                         {({ Input, isFirst, onAdd, onRemove }) => (
                             <>

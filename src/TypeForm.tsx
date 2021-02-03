@@ -25,14 +25,14 @@ type TypeFormProps<T extends ValueObject> = {
 TypeForm.defaultProps = {};
 
 export function TypeForm<I extends ValueObject>({ initialValues, children, onSubmit }: TypeFormProps<I>): JSX.Element {
-    const [{ values }, setState] = useState<{ values: I }>({ values: initialValues });
-    const [message, setMessage] = useState<null | string>(null);
+    const [ { values }, setState ] = useState<{ values: I }>({ values: initialValues });
+    const [ message, setMessage ] = useState<null | string>(null);
 
     // set values with change initialValues
     useEffect(() => {
         setState({ values: initialValues });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [JSON.stringify(initialValues)]);
+    }, [ JSON.stringify(initialValues) ]);
 
     const names = Object.keys(values);
 
@@ -43,7 +43,7 @@ export function TypeForm<I extends ValueObject>({ initialValues, children, onSub
         names.forEach(name => Input[capitalize(name)] = getInput(name));
         return Input;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [JSON.stringify(names)]);
+    }, [ JSON.stringify(names) ]);
 
     const setValue = useCallback((name: keyof I, value: Value) => {
         setState(state => ({ values: { ...state.values, [name]: value } }));
@@ -53,7 +53,7 @@ export function TypeForm<I extends ValueObject>({ initialValues, children, onSub
     const onSubmitCallback = useCallback(async () => {
         const message = await onSubmit(values);
         setMessage(message);
-    }, [onSubmit, values]);
+    }, [ onSubmit, values ]);
 
     return <TypeFormContext.Provider value={{ values, setValue }}>
         {children({

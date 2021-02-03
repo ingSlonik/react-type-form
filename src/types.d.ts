@@ -1,4 +1,7 @@
-import { InputArrayProps, InputBooleanProps, InputDateProps, InputNumberProps, InputObjectProps, InputSelectProps, InputStringProps } from "./Inputs";
+import {
+    InputBooleanProps, InputDateProps, InputNumberProps, InputSelectProps, InputStringProps,
+    InputArrayProps, InputObjectProps,
+} from "./Inputs";
 
 
 export type Value = null | boolean | number | string | Date | Array<Value> | ValueObject;
@@ -12,9 +15,9 @@ export type Input<T extends Value> =
     T extends Value[] ? InputArrayType<T[number]> :
     T extends ValueObject ? InputObjectType<T> : "Unreachable";
 
-interface InputSelectable<T extends Value, Props extends {}> {
+interface InputSelectable<T extends Value, Props extends Record<string, unknown>> {
     (props: Props): JSX.Element;
-    select: InputSelectType<T>;
+    Select: InputSelectType<T>;
 }
 
 type InputSelectType<T extends Value> = (props: InputSelectProps<T>) => JSX.Element;

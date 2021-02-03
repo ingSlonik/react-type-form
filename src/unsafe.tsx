@@ -5,7 +5,11 @@ import React from "react";
 
 import { useCallback, useContext } from "react";
 import { TypeFormContext } from "./context";
-import { InputObject, InputArray, InputBoolean, InputDate, InputNull, InputNumber, InputSelect, InputString } from "./Inputs";
+
+import {
+    InputObject, InputArray, InputBoolean, InputDate, InputNull, InputNumber, InputSelect, InputString,
+} from "./Inputs";
+
 import { FormInputProps, Input, Value } from "./types";
 
 export function getInput<T extends Value>(name: string): Input<T> {
@@ -15,7 +19,7 @@ export function getInput<T extends Value>(name: string): Input<T> {
         {...props}
     />;
     // eslint-disable-next-line react/display-name
-    Input.select = (props: any) => <InputRouter
+    Input.Select = (props: any) => <InputRouter
         inputType="select"
         name={name}
         {...props}
@@ -26,12 +30,14 @@ export function getInput<T extends Value>(name: string): Input<T> {
     return Input;
 }
 
-export function useTypeFormField<T extends Value>({ name }: { name: string }): { value: T, setValue: (value: T | null) => void } {
+export function useTypeFormField<T extends Value>(
+    { name }: { name: string },
+): { value: T, setValue: (value: T | null) => void } {
     const { values, setValue } = useContext(TypeFormContext);
 
     const setValueWithoutName = useCallback(
         (value: T | null) => setValue(name, value),
-        [name, setValue]
+        [ name, setValue ],
     );
 
     const value = (values as any)[name] as T;
@@ -43,7 +49,9 @@ export type InputRouterProps<T extends Value, InputProps> = FormInputProps<T> & 
     inputType: "input" | "select" | "custom"
 }
 
-export function InputRouter<T extends Value, InputProps>({ inputType, ...props }: InputRouterProps<T, InputProps>): JSX.Element {
+export function InputRouter<T extends Value, InputProps>(
+    { inputType, ...props }: InputRouterProps<T, InputProps>,
+): JSX.Element {
     const { value, setValue } = useTypeFormField<T>(props);
 
     let Input: any;

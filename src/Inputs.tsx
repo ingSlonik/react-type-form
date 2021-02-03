@@ -13,7 +13,7 @@ function getLabelFromName(name: string): string {
     return name.split(labelFromNameRegExp)
         .map((word, i) => i === 0 ?
             word.charAt(0).toLocaleUpperCase() + word.substring(1) :
-            word.charAt(0).toLocaleLowerCase() + word.substring(1)
+            word.charAt(0).toLocaleLowerCase() + word.substring(1),
         )
         .join(" ");
 }
@@ -96,22 +96,28 @@ InputDate.defaultProps = {
 export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Element {
     const { value, setValue, label, style, readOnly, notNullValue, formatRead, formatWrite } = props;
 
-    const [valueString, setValueString] = useState(moment(value).format(formatWrite));
+    const [ valueString, setValueString ] = useState(moment(value).format(formatWrite));
 
     useEffect(() => {
         setValueString(moment(value).format(formatWrite));
-    }, [value, formatWrite]);
+    }, [ value, formatWrite ]);
 
     const valueStringMoment = moment(valueString, formatWrite, true);
     const isValid = valueStringMoment.isValid();
 
+    const labelWithDate = `${
+        props.label || getLabelFromName(props.name)
+    } (${isValid ? valueStringMoment.format(formatRead) : moment(value).format(formatRead)})`;
+
     return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} >
-        <Label
-            name={props.name}
-            label={`${props.label || getLabelFromName(props.name)} (${isValid ? valueStringMoment.format(formatRead) : moment(value).format(formatRead)})`}
-        />
+        <Label name={props.name} label={labelWithDate} />
         <div className="flex-row">
-            {notNullValue !== null && <Checkbox label={label} name={props.name} value={false} onChange={() => setValue(null)} />}
+            {notNullValue !== null && <Checkbox
+                label={label}
+                name={props.name}
+                value={false}
+                onChange={() => setValue(null)}
+            />}
             <input
                 className="grow-1"
                 type="text"
@@ -142,13 +148,13 @@ export type InputNumberProps = InputAllProps & {
 
 InputNumber.defaultProps = {
     ...inputAllDefaultProps,
-    type: "int"
+    type: "int",
 };
 
 export function InputNumber(props: FormInputProps<number> & InputNumberProps): JSX.Element {
     const { value, setValue, readOnly, type, style, min, max } = props;
 
-    const [stringValue, setStringValue] = useState(String(value));
+    const [ stringValue, setStringValue ] = useState(String(value));
 
     const getValueFromString = useCallback((stringValue: string) => {
         let value = type === "int" ? parseInt(stringValue) : parseFloat(stringValue);
@@ -165,11 +171,11 @@ export function InputNumber(props: FormInputProps<number> & InputNumberProps): J
         if (typeof max === "number" && value > max) value = max;
 
         return value;
-    }, [type, min, max]);
+    }, [ type, min, max ]);
 
     useEffect(() => {
         setStringValue(String(value));
-    }, [value]);
+    }, [ value ]);
 
     const isValid = stringValue === String(getValueFromString(stringValue));
 
@@ -267,7 +273,9 @@ export function InputNull(props: FormInputProps<Value> & InputNullProps): JSX.El
     </div>;
 }
 
-function Checkbox({ value, label, name, onChange }: { value: boolean, name: string, label?: string, onChange: (v: boolean) => void }) {
+function Checkbox(
+    { value, label, name, onChange }: { value: boolean, name: string, label?: string, onChange: (v: boolean) => void },
+): JSX.Element {
     return <div className="checkbox" onClick={() => onChange(!value)}>
         <input type="checkbox" checked={value} readOnly />
         <Label name={name} label={label} />
@@ -296,18 +304,18 @@ export function InputArray<T extends Value>(props: FormInputProps<T[]> & InputAr
     const valuesLength = values.length;
     const Inputs = useMemo(() => {
         return Array.from({ length: valuesLength }).map((_, i) => getInput(String(i)));
-    }, [valuesLength]);
+    }, [ valuesLength ]);
 
     const setValue = useCallback((index: string, value) => {
         setValues(values.map((v, i) => index === String(i) ? value : v));
-    }, [setValues, values]);
+    }, [ setValues, values ]);
 
     const onAdd = useCallback((value: T) => {
-        setValues([...values, value]);
-    }, [setValues, values]);
+        setValues([ ...values, value ]);
+    }, [ setValues, values ]);
     const onRemove = useCallback((value: T) => {
         setValues(values.filter(v => v !== value));
-    }, [setValues, values]);
+    }, [ setValues, values ]);
 
     return <TypeFormContext.Provider value={{ values, setValue }}>
         {values.map((item, index) => {
@@ -359,11 +367,11 @@ export function InputObject<T extends ValueObject>(props: FormInputProps<T> & In
         names.forEach(name => Input[capitalize(name)] = getInput(name));
         return Input;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [JSON.stringify(names)]);
+    }, [ JSON.stringify(names) ]);
 
     const setValue = useCallback((name, value) => {
         setValues({ ...values, [name]: value });
-    }, [setValues, values]);
+    }, [ setValues, values ]);
 
     return <TypeFormContext.Provider value={{ values, setValue }}>
         {props.children({ Input, values })}
