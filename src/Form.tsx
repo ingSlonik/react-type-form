@@ -16,15 +16,15 @@ type FormChildren<T extends ValueObject> = {
     onSubmit: () => void,
 }
 
-type TypeFormProps<T extends ValueObject> = {
+type FormProps<T extends ValueObject> = {
     initialValues: T,
     onSubmit: (values: T) => Promise<null | string>,
     children: (formChildren: FormChildren<T>) => JSX.Element,
 }
 
-TypeForm.defaultProps = {};
+Form.defaultProps = {};
 
-export function TypeForm<I extends ValueObject>({ initialValues, children, onSubmit }: TypeFormProps<I>): JSX.Element {
+export function Form<I extends ValueObject>({ initialValues, children, onSubmit }: FormProps<I>): JSX.Element {
     const [ { values }, setState ] = useState<{ values: I }>({ values: initialValues });
     const [ message, setMessage ] = useState<null | string>(null);
 

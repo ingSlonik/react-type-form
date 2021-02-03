@@ -3,11 +3,11 @@ import React from "react";
 
 import "../src/styles.scss";
 
-import { TypeForm } from "../src";
+import { Form } from "../src";
 
 function InputsExample() {
     return (
-        <TypeForm
+        <Form
             initialValues={{
                 name: "",
                 age: 25,
@@ -49,7 +49,7 @@ function InputsExample() {
                     <pre>{JSON.stringify({ values, message, isChanged }, null, 4)}</pre>
                 </>
             )}
-        </TypeForm>
+        </Form>
     );
 }
 

@@ -1,2 +1,2 @@
-export * from "./TypeForm";
+export * from "./Form";
 export * from "./Inputs";

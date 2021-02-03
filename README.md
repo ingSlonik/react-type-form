@@ -1,6 +1,6 @@
-# React Type-Form
+# Type Safe Form
 
-Type safe react form.
+Type safe form for React.
 
 > :warning: TThis is `alpha` version at this moment. For production use library as `formik`. However, I welcome you to try this library and leave the issues.
 
@@ -35,7 +35,7 @@ $ npm install --save type-form
 ### Import
 
 ```jsx
-import { TypeForm } from "react-type-form";
+import { Form } from "type-safe-form";
 ```
 
 ### Styles
@@ -58,11 +58,11 @@ $ npm run example -- --entry ./examples/Inputs.tsx
 ```
 
 ```jsx
-import { TypeForm } from "react-type-form";
+import { Form } from "type-safe-form";
 
 function InputsExample() {
   return (
-    <TypeForm
+    <Form
       initialValues={{
         name: "",
         age: 25,
@@ -96,7 +96,7 @@ function InputsExample() {
           <button onClick={onSubmit}>Send</button>
         </>
       )}
-    </TypeForm>
+    </Form>
   );
 }
 ```
