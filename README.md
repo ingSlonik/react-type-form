@@ -16,13 +16,13 @@ This package is inspired by `formik`.
 
 ## Features / Roadmap
 
-- [x] TypeForm API
+- [x] Type Safe Form API
 - [x] Inputs
 - [ ] Validation
 - [ ] Custom inputs
+- [ ] React native support
 - [ ] Full documentation
 - [ ] v1.0.0
-- [ ] React native
 
 ## Get started
 

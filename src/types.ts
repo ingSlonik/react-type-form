@@ -27,7 +27,7 @@ type InputNumberType<T extends number | null> = InputSelectable<T, InputNumberPr
 type InputBooleanType<T extends boolean | null> = InputSelectable<T, InputBooleanProps>;
 type InputDateType<T extends Date | null> = InputSelectable<T, InputDateProps>
 type InputArrayType<T extends Value> = InputSelectable<T, InputArrayProps<T>>;
-type InputObjectType<T extends ValueObject> = InputSelectable<T, InputObjectProps<T>>;
+export type InputObjectType<T extends ValueObject> = InputSelectable<T, InputObjectProps<T>>;
 
 export type InputsObject<T extends ValueObject> = {
     [N in keyof T as Capitalize<string & N>]: Input<T[N]>
