@@ -1,4 +1,4 @@
-# Type-Form
+# React Type-Form
 
 Type safe react form.
 
@@ -35,7 +35,7 @@ $ npm install --save type-form
 ### Import
 
 ```jsx
-import { TypeForm } from "type-form";
+import { TypeForm } from "react-type-form";
 ```
 
 ### Styles
@@ -46,7 +46,7 @@ Include basic styles of `type-form` inputs.
 It will not affect your styling.
 
 ```jsx
-import "type-form/styles.css";
+import "react-type-form/styles.css";
 ```
 
 ## Examples
@@ -58,7 +58,7 @@ $ npm run example -- --entry ./examples/Inputs.tsx
 ```
 
 ```jsx
-import { TypeForm } from "type-form";
+import { TypeForm } from "react-type-form";
 
 function InputsExample() {
   return (
