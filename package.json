@@ -1,5 +1,5 @@
 {
-    "name": "type-form",
+    "name": "react-type-form",
     "version": "0.1.1",
     "description": "Type safe react form",
     "main": "lib/index.js",
@@ -47,9 +47,9 @@
     "author": "Filip Paulů <ing.fenix@seznam.cz>",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ingSlonik/type-form.git"
+        "url": "git+https://github.com/ingSlonik/react-type-form.git"
     },
     "bugs": {
-        "url": "https://github.com/ingSlonik/type-form/issues"
+        "url": "https://github.com/ingSlonik/react-type-form/issues"
     }
 }
