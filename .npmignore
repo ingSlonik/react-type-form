@@ -1,2 +1,6 @@
+examples/
 node_modules/
+src/
+.eslintrc.js
 package-lock.json
+webpack.config.js
