@@ -35,7 +35,7 @@ function ValidationExample() {
         >
             {({ Input, values, message, isChanged, isValid, onSubmit }) => (
                 <>
-                    <Input.Name onValidate={async name => {
+                    <Input.Name placeholder="Jane" onValidate={async name => {
                         if (name && name.length === 4) {
                             return true;
                         } else {

@@ -104,16 +104,18 @@ function useValidation<T extends Value>(
 
 export type InputStringProps = InputAllProps<string> & {
     type?: "text" | "textarea" | "mail" | "password",
+    placeholder?: string,
     onEnter?: () => void,
 }
 
 InputString.defaultProps = {
     ...inputAllDefaultProps,
     type: "text",
+    placeholder: "",
 };
 
 export function InputString(props: FormInputProps<string> & InputStringProps): JSX.Element {
-    const { value, setValue, readOnly, type, style, onEnter } = props;
+    const { placeholder, value, setValue, readOnly, type, style, onEnter } = props;
 
     const validationString = useCallback(async (value: string) => {
         if (type === "mail") return validateMail(value);
@@ -125,6 +127,7 @@ export function InputString(props: FormInputProps<string> & InputStringProps): J
     return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         {type !== "textarea" && <input
+            placeholder={placeholder}
             type={type}
             style={style}
             readOnly={readOnly || false}
@@ -136,7 +139,7 @@ export function InputString(props: FormInputProps<string> & InputStringProps): J
             }}
         />}
         {type === "textarea" && <textarea
-            style={style}
+            placeholder={placeholder}
             readOnly={readOnly || false}
             value={value}
             onChange={e => setValue(e.target.value)}
@@ -213,15 +216,17 @@ export type InputNumberProps = InputAllProps<number> & {
     type?: "int" | "float",
     min?: number,
     max?: number,
+    placeholder?: string,
 }
 
 InputNumber.defaultProps = {
     ...inputAllDefaultProps,
     type: "int",
+    placeholder: "",
 };
 
 export function InputNumber(props: FormInputProps<number> & InputNumberProps): JSX.Element {
-    const { value, setValue, readOnly, type, style, min, max } = props;
+    const { placeholder, value, setValue, readOnly, type, style, min, max } = props;
 
     const validationNumber = useCallback(async (value: number) => {
         let error: ErrorValue<number> = true;
@@ -259,6 +264,7 @@ export function InputNumber(props: FormInputProps<number> & InputNumberProps): J
     return <div className={`type-form-input ${isValid && isValidString ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         <input
+            placeholder={placeholder}
             type={"number"}
             style={style}
             readOnly={readOnly || false}
@@ -307,14 +313,16 @@ export function InputBoolean(props: FormInputProps<boolean> & InputBooleanProps)
 
 export type InputSelectProps<T extends Value> = InputAllProps<T> & {
     options: Array<{ value: T, text: string }>,
+    placeholder?: string,
 }
 
 InputSelect.defaultProps = {
     ...inputAllDefaultProps,
+    placeholder: "Select...",
 };
 
 export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSelectProps<T>): JSX.Element {
-    const { value, setValue, options, style } = props;
+    const { value, setValue, options, style, placeholder } = props;
 
     const [ isValid, message ] = useValidation(props);
 
@@ -329,7 +337,7 @@ export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSel
                         setValue(options[index].value);
                 }}
             >
-                <option value={String(-1)} disabled>Vyber...</option>
+                <option value={String(-1)} disabled>{placeholder}</option>
                 {options.map((option, index) => <option key={index} value={String(index)}>{option.text}</option>)}
             </select>
         </div>
