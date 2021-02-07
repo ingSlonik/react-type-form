@@ -10,7 +10,7 @@ import {
     InputObject, InputArray, InputBoolean, InputDate, InputNull, InputNumber, InputSelect, InputString,
 } from "./Inputs";
 
-import { FormInputProps, Input, Value } from "./types";
+import { FormInputProps, Input, Value, ErrorValue } from "./types";
 
 export function getInput<T extends Value>(name: string): Input<T> {
     const Input: any = (props: any) => <InputRouter
@@ -30,19 +30,24 @@ export function getInput<T extends Value>(name: string): Input<T> {
     return Input;
 }
 
-export function useTypeFormField<T extends Value>(
+function useFormField<T extends Value>(
     { name }: { name: string },
-): { value: T, setValue: (value: T | null) => void } {
-    const { values, setValue } = useContext(TypeFormContext);
+): { value: T, setValue: (value: T | null) => void, error: ErrorValue<T>, setError: (error: ErrorValue<T>) => void } {
+    const { values, setValue, errors, setError } = useContext(TypeFormContext);
 
     const setValueWithoutName = useCallback(
         (value: T | null) => setValue(name, value),
         [ name, setValue ],
     );
+    const setErrorWithoutName = useCallback(
+        (error: ErrorValue<T>) => setError(name, error),
+        [ name, setError ],
+    );
 
     const value = (values as any)[name] as T;
+    const error = (errors as any)[name] as ErrorValue<T>;
 
-    return { value, setValue: setValueWithoutName };
+    return { value, setValue: setValueWithoutName, error, setError: setErrorWithoutName };
 }
 
 export type InputRouterProps<T extends Value, InputProps> = FormInputProps<T> & InputProps & {
@@ -52,7 +57,8 @@ export type InputRouterProps<T extends Value, InputProps> = FormInputProps<T> & 
 export function InputRouter<T extends Value, InputProps>(
     { inputType, ...props }: InputRouterProps<T, InputProps>,
 ): JSX.Element {
-    const { value, setValue } = useTypeFormField<T>(props);
+    const formProps = useFormField<T>(props);
+    const { value } = formProps;
 
     let Input: any;
 
@@ -84,7 +90,7 @@ export function InputRouter<T extends Value, InputProps>(
         throw new Error("Unreachable");
     }
 
-    return <Input {...props} value={value} setValue={setValue} />;
+    return <Input {...props} {...formProps} />;
 }
 
 export function capitalize<T extends string>(name: T): Capitalize<T> {

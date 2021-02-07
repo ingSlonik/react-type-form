@@ -33,10 +33,27 @@ export type InputsObject<T extends ValueObject> = {
     [N in keyof T as Capitalize<string & N>]: Input<T[N]>
 };
 
+// Validation
+
+/**
+ * `false` and `undefined` is without error
+ * `true` is error without message
+ * `string` is error with message
+ */
+export type ErrorValue<T extends Value> =
+    T extends Value[] ? ErrorArray<T[number]> :
+    T extends ValueObject ? ErrorObject<T> :
+    undefined | boolean | string;
+
+export type ErrorArray<T extends Value> = ErrorValue<T>[];
+export type ErrorObject<T extends ValueObject> = { [N in keyof T]?: ErrorValue<T[N]> };
+
 // Inputs
 
-export type FormInputProps<T> = {
+export type FormInputProps<T extends Value> = {
     name: string,
     value: T,
-    setValue: (value: T | null) => void;
+    setValue: (value: T | null) => void,
+    error: ErrorValue<T>,
+    setError: (valid: ErrorValue<T>) => void,
 };

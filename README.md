@@ -2,7 +2,7 @@
 
 Type safe form for React.
 
-> :warning: TThis is `alpha` version at this moment. For production use library as `formik`. However, I welcome you to try this library and leave the issues.
+> :warning: This is `alpha` version at this moment. For production use library as `formik`. However, I welcome you to try this library and leave the issues.
 
 ## Main motivation
 
@@ -18,7 +18,7 @@ This package is inspired by `formik`.
 
 - [x] Type Safe Form API
 - [x] Inputs
-- [ ] Validation
+- [x] Validation
 - [ ] Custom inputs
 - [ ] React native support
 - [ ] Full documentation
@@ -55,6 +55,7 @@ In folder `examples`.
 
 ```
 $ npm run example -- --entry ./examples/Inputs.tsx
+$ npm run example -- --entry ./examples/Validation.tsx
 ```
 
 ```jsx
@@ -99,6 +100,29 @@ function InputsExample() {
     </Form>
   );
 }
+```
+
+### Validation
+
+There are implemented basic validations as `validate*` functions.
+You can validate on 3 levels.
+
+#### In specific input
+
+```jsx
+<Input.Name ... onValidate={async (value) => (value.length > 50 ? "Too long" : true)} />
+```
+
+#### On form
+
+```jsx
+<Form ... onValidate={async values => values.name === "Jane" && values.age > 30 ? "Jane, you are too old" : true} />
+```
+
+#### With onSubmit
+
+```jsx
+<Form ... onSubmit={async values => !values.confirm ? "You have to confirm" : await sendForm(values)} />
 ```
 
 ## Input types

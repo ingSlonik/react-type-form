@@ -7,6 +7,9 @@ $danger: #BF225B;
 
 .type-form-input {
 
+    margin-top: 4px;
+    margin-bottom: 16px;
+
     label {
         font-weight: bold;
         font-size: 85%;
@@ -22,9 +25,7 @@ $danger: #BF225B;
         border-bottom: 1px solid $primary;
 
         font-size: 100%;
-        padding: 4px 16px;
-        margin-top: 4px;
-        margin-bottom: 16px;
+        padding: 4px 8px;
 
         &:focus {
             border: none;
@@ -51,10 +52,20 @@ $danger: #BF225B;
         margin-right: 16px;
     }
 
+    .message {
+        font-size: 85%;
+        padding: 2px 8px;
+        color: $success;
+    }
+
     &.not-valid {
         input {
             background-color: fade-out($warning, 0.7);
             border-bottom: 1px solid $warning;
+        }
+
+        .message {
+            color: $warning;
         }
     }
 

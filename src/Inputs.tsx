@@ -6,7 +6,33 @@ import isEqual from "lodash/isEqual";
 import { TypeFormContext } from "./context";
 import { capitalize, getInput } from "./unsafe";
 
-import { FormInputProps, Input, InputObjectType, InputsObject, Value, ValueObject } from "./types";
+import {
+    validateDate, validateDateString, validateInt, validateIsRequired, validateMail, validateMax, validateMin,
+} from "./validations";
+
+import {
+    FormInputProps, Input, InputObjectType, InputsObject, Value, ValueObject,
+    ErrorValue, ErrorArray,
+} from "./types";
+
+type OnValidate<T extends Value> = (value: T | null) => Promise<ErrorValue<T>>;
+
+type InputAllProps<T extends Value> = {
+    label?: string,
+    required?: boolean,
+    readOnly?: boolean,
+    notNullValue?: Value,
+    style?: CSSProperties,
+    onValidate?: OnValidate<T>,
+};
+
+const inputAllDefaultProps = {
+    style: {},
+    required: false,
+    readOnly: false,
+    notNullValue: null,
+};
+
 
 const labelFromNameRegExp = new RegExp("[A-Z][a-z]", "g");
 function getLabelFromName(name: string): string {
@@ -28,23 +54,56 @@ function Label({ label, name }: { label?: string, name: string }) {
     }
 }
 
+type ValidationResult = [ isValid: boolean, message: null | string ];
 
-type InputAllProps = {
-    label?: string,
-    readOnly?: boolean,
-    notNullValue?: Value,
-    style?: CSSProperties,
-};
+function useValidation<T extends Value>(
+    props: { value: T } & FormInputProps<T> & InputAllProps<T>,
+    inputValidation?: OnValidate<T>,
+): ValidationResult {
+    const { value, required, error, setError, onValidate } = props;
+    const [ result, setResult ] = useState<ValidationResult>([ true, null ]);
 
-const inputAllDefaultProps = {
-    style: {},
-    readOnly: false,
-    notNullValue: null,
-};
+    useEffect(() => {
+        const requiredValidation = validateIsRequired(value);
+        let newResult: ValidationResult = [ true, null ];
 
+        if (typeof error === "string") {
+            newResult = [ false, error ];
+        } else if (error === false) {
+            newResult = [ false, null ];
+        } else if (required === true && requiredValidation !== true) {
+            newResult = [ false, typeof requiredValidation === "string" ? requiredValidation : null ];
+        } else if (onValidate || inputValidation) {
+            (async () => {
+                if (onValidate) {
+                    const onValidateError = await onValidate(value);
+                    if (onValidateError === true) {
+                        if (inputValidation) {
+                            const inputValidationError = await inputValidation(value);
+                            if (inputValidationError !== error)
+                                setError(inputValidationError);
+                        } else {
+                            if (onValidateError !== error)
+                                setError(onValidateError);
+                        }
+                    } else {
+                        if (onValidateError !== error)
+                            setError(onValidateError);
+                    }
+                }
+            })();
+        }
 
-export type InputStringProps = InputAllProps & {
-    type?: "text" | "textarea" | "mail",
+        if (newResult[0] !== result[0] || newResult[1] !== result[1]) {
+            setResult(newResult);
+        }
+    }, [ value, result, required, error, onValidate, setError, inputValidation ]);
+
+    return result;
+}
+
+export type InputStringProps = InputAllProps<string> & {
+    type?: "text" | "textarea" | "mail" | "password",
     onEnter?: () => void,
 }
 
@@ -56,7 +115,14 @@ InputString.defaultProps = {
 export function InputString(props: FormInputProps<string> & InputStringProps): JSX.Element {
     const { value, setValue, readOnly, type, style, onEnter } = props;
 
-    return <div className="type-form-input">
+    const validationString = useCallback(async (value: string) => {
+        if (type === "mail") return validateMail(value);
+        return true;
+    }, [ type ]);
+
+    const [ isValid, message ] = useValidation(props, validationString);
+
+    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         {type !== "textarea" && <input
             type={type}
@@ -79,10 +145,11 @@ export function InputString(props: FormInputProps<string> & InputStringProps): J
                     onEnter();
             }}
         />}
+        {message && <div className="message">{message}</div>}
     </div>;
 }
 
-export type InputDateProps = InputAllProps & {
+export type InputDateProps = InputAllProps<Date> & {
     formatRead?: string,
     formatWrite?: string,
 };
@@ -96,20 +163,21 @@ InputDate.defaultProps = {
 export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Element {
     const { value, setValue, label, style, readOnly, notNullValue, formatRead, formatWrite } = props;
 
+    const validationDate = useCallback(async (value: Date) => validateDate(value), [ ]);
+
+    const [ isValid, message ] = useValidation(props, validationDate);
+
     const [ valueString, setValueString ] = useState(moment(value).format(formatWrite));
 
-    useEffect(() => {
-        setValueString(moment(value).format(formatWrite));
-    }, [ value, formatWrite ]);
+    useEffect(() => setValueString(moment(value).format(formatWrite)), [ value, formatWrite ]);
 
-    const valueStringMoment = moment(valueString, formatWrite, true);
-    const isValid = valueStringMoment.isValid();
+    const isValidString = validateDateString(valueString, formatWrite || InputDate.defaultProps.formatWrite) === true;
 
     const labelWithDate = `${
         props.label || getLabelFromName(props.name)
-    } (${isValid ? valueStringMoment.format(formatRead) : moment(value).format(formatRead)})`;
+    } (${isValidString ? moment(valueString, formatWrite).format(formatRead) : moment(value).format(formatRead)})`;
 
-    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} >
+    return <div className={`type-form-input ${isValid && isValidString ? "valid" : "not-valid"}`} style={style}>
         <Label name={props.name} label={labelWithDate} />
         <div className="flex-row">
             {notNullValue !== null && <Checkbox
@@ -136,11 +204,12 @@ export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Ele
                 }}
             />
         </div>
+        {message && <div className="message">{message}</div>}
     </div>;
 }
 
 
-export type InputNumberProps = InputAllProps & {
+export type InputNumberProps = InputAllProps<number> & {
     type?: "int" | "float",
     min?: number,
     max?: number,
@@ -153,6 +222,16 @@ InputNumber.defaultProps = {
 
 export function InputNumber(props: FormInputProps<number> & InputNumberProps): JSX.Element {
     const { value, setValue, readOnly, type, style, min, max } = props;
+
+    const validationNumber = useCallback(async (value: number) => {
+        let error: ErrorValue<number> = true;
+        if (type === "int") error = validateInt(value);
+        if (typeof min === "number") error = validateMin(value, min);
+        if (typeof max === "number") error = validateMax(value, max);
+        return error;
+    }, [ type, min, max ]);
+
+    const [ isValid, message ] = useValidation(props, validationNumber);
 
     const [ stringValue, setStringValue ] = useState(String(value));
 
@@ -173,13 +252,11 @@ export function InputNumber(props: FormInputProps<number> & InputNumberProps): J
         return value;
     }, [ type, min, max ]);
 
-    useEffect(() => {
-        setStringValue(String(value));
-    }, [ value ]);
+    useEffect(() => setStringValue(String(value)), [ value ]);
 
-    const isValid = stringValue === String(getValueFromString(stringValue));
+    const isValidString = stringValue === String(getValueFromString(stringValue));
 
-    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`}>
+    return <div className={`type-form-input ${isValid && isValidString ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         <input
             type={"number"}
@@ -204,10 +281,11 @@ export function InputNumber(props: FormInputProps<number> & InputNumberProps): J
                 setValue(value);
             }}
         />
+        {message && <div className="message">{message}</div>}
     </div>;
 }
 
-export type InputBooleanProps = InputAllProps & {
+export type InputBooleanProps = InputAllProps<boolean> & {
 }
 
 InputBoolean.defaultProps = {
@@ -217,14 +295,17 @@ InputBoolean.defaultProps = {
 export function InputBoolean(props: FormInputProps<boolean> & InputBooleanProps): JSX.Element {
     const { value, setValue, label, style } = props;
 
-    return <div className={"type-form-input"} style={style} >
+    const [ isValid, message ] = useValidation(props);
+
+    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <div className="flex-row">
             <Checkbox label={label} name={props.name} value={value} onChange={setValue} />
         </div>
+        {message && <div className="message">{message}</div>}
     </div>;
 }
 
-export type InputSelectProps<T extends Value> = InputAllProps & {
+export type InputSelectProps<T extends Value> = InputAllProps<T> & {
     options: Array<{ value: T, text: string }>,
 }
 
@@ -235,7 +316,9 @@ InputSelect.defaultProps = {
 export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSelectProps<T>): JSX.Element {
     const { value, setValue, options, style } = props;
 
-    return <div className={"type-form-input"} style={style} >
+    const [ isValid, message ] = useValidation(props);
+
+    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         <div className="flex-row">
             <select
@@ -250,16 +333,19 @@ export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSel
                 {options.map((option, index) => <option key={index} value={String(index)}>{option.text}</option>)}
             </select>
         </div>
+        {message && <div className="message">{message}</div>}
     </div>;
 }
 
 
-type InputNullProps = InputAllProps;
+type InputNullProps = InputAllProps<Value>;
 
 export function InputNull(props: FormInputProps<Value> & InputNullProps): JSX.Element {
-    const { value, setValue, notNullValue } = props;
+    const { style, value, setValue, notNullValue } = props;
 
-    return <div className="type-form-input">
+    const [ isValid, message ] = useValidation(props);
+
+    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         <Checkbox
             label={"Použít"}
@@ -270,6 +356,7 @@ export function InputNull(props: FormInputProps<Value> & InputNullProps): JSX.El
                 setValue(typeof value === "undefined" ? null : value);
             }}
         />
+        {message && <div className="message">{message}</div>}
     </div>;
 }
 
@@ -299,7 +386,9 @@ export type InputArrayProps<T extends Value> = {
 };
 
 export function InputArray<T extends Value>(props: FormInputProps<T[]> & InputArrayProps<T>): JSX.Element {
-    const { value: values, setValue: setValues } = props;
+    const { value: values, setValue: setValues, error, setError: setErrors } = props;
+
+    const errors = useMemo(() => Array.isArray(error) ? error : [], [ error ]) as ErrorArray<T>;
 
     const valuesLength = values.length;
     const Inputs = useMemo(() => {
@@ -310,6 +399,13 @@ export function InputArray<T extends Value>(props: FormInputProps<T[]> & InputAr
         setValues(values.map((v, i) => index === String(i) ? value : v));
     }, [ setValues, values ]);
 
+    const setError = useCallback((index: string, error) => {
+        // Errors can be undefined and doesn't need to have all indexes
+        const newErrors = [ ...errors ];
+        newErrors[parseInt(index)] = error;
+        setErrors(newErrors as ErrorValue<T[]>);
+    }, [ setErrors, errors ]);
+
     const onAdd = useCallback((value: T) => {
         setValues([ ...values, value ]);
     }, [ setValues, values ]);
@@ -317,9 +413,9 @@ export function InputArray<T extends Value>(props: FormInputProps<T[]> & InputAr
         setValues(values.filter(v => v !== value));
     }, [ setValues, values ]);
 
-    return <TypeFormContext.Provider value={{ values, setValue }}>
+    return <TypeFormContext.Provider value={{ values, setValue, errors, setError }}>
         {values.map((item, index) => {
-            const itemArrayChildren = {
+            const itemArrayChildren: Omit<InputArrayItemChildren<T>, "Input"> = {
                 item,
                 index,
                 isFirst: index === 0,
@@ -356,7 +452,7 @@ export type InputObjectProps<T extends ValueObject> = {
 }
 
 export function InputObject<T extends ValueObject>(props: FormInputProps<T> & InputObjectProps<T>): JSX.Element {
-    const { value: values, setValue: setValues } = props;
+    const { value: values, setValue: setValues, error: errors, setError: setErrors } = props;
 
     const names = Object.keys(values);
 
@@ -372,8 +468,11 @@ export function InputObject<T extends ValueObject>(props: FormInputProps<T> & In
     const setValue = useCallback((name, value) => {
         setValues({ ...values, [name]: value });
     }, [ setValues, values ]);
+    const setError = useCallback((name, error) => {
+        setErrors({ ...errors, [name]: error });
+    }, [ setErrors, errors ]);
 
-    return <TypeFormContext.Provider value={{ values, setValue }}>
+    return <TypeFormContext.Provider value={{ values, setValue, errors, setError }}>
         {props.children({ Input, values })}
     </TypeFormContext.Provider>;
 }
