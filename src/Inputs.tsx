@@ -102,6 +102,33 @@ function useValidation<T extends Value>(
     return result;
 }
 
+type UseInput<T extends string | number | boolean | Date> = {
+    Input: Input<T>,
+    value: T | null,
+    error: boolean | string,
+    setValue: (value: T | null) => void,
+    setError: (error: boolean | string) => void,
+}
+
+export function useInput<T extends Value>(defaultValue: T): UseInput<T> {
+    const [ value, setValue ] = useState<T | null>(defaultValue);
+    const [ error, setError ] = useState<boolean | string>(true);
+
+    const Input = (props) => {
+        const Input = getInput("useInput");
+        return <TypeFormContext.Provider value={{
+            values: { useInput: value },
+            setValue: (name, value) => setValue(value),
+            errors: { useInput: error },
+            setError: (name, error) => setError(error),
+        }}>
+            <Input {...props} />
+        </TypeFormContext.Provider>;
+    };
+
+    return { Input, value, setValue, error, setError };
+}
+
 export type InputStringProps = InputAllProps<string> & {
     type?: "text" | "textarea" | "mail" | "password",
     placeholder?: string,

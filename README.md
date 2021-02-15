@@ -55,6 +55,7 @@ In folder `examples`.
 
 ```
 $ npm run example -- --entry ./examples/Inputs.tsx
+$ npm run example -- --entry ./examples/UseInput.tsx
 $ npm run example -- --entry ./examples/Validation.tsx
 ```
 
@@ -99,6 +100,15 @@ function InputsExample() {
       )}
     </Form>
   );
+}
+```
+
+```jsx
+import { useInput } from "type-safe-form";
+
+function Page() {
+  const { Input, value, error, setValue, setError } = useInput("Filip");
+  return <Input />;
 }
 ```
 
