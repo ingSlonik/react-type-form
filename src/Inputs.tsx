@@ -4,22 +4,22 @@ import moment from "moment";
 import isEqual from "lodash/isEqual";
 
 import { TypeFormContext } from "./context";
-import { capitalize, getInput } from "./unsafe";
+import { NAME_EMPTY, getInput, useSelectableInputObject } from "./unsafe";
 
 import {
     validateDate, validateDateString, validateInt, validateIsRequired, validateMail, validateMax, validateMin,
 } from "./validations";
 
 import {
-    FormInputProps, Input, InputObjectType, InputsObject, Value, ValueObject,
-    ErrorValue, ErrorArray,
+    FormInputProps, Input, InputObjectType, Value, ValueObject,
+    ErrorValue, ErrorArray, InputsObjectSelectable,
 } from "./types";
 
 type OnValidate<T extends Value> = (value: T | null) => Promise<ErrorValue<T>>;
 
 type InputAllProps<T extends Value> = {
     label?: string,
-    required?: boolean,
+    required?: boolean | string,
     readOnly?: boolean,
     notNullValue?: Value,
     style?: CSSProperties,
@@ -64,7 +64,7 @@ function useValidation<T extends Value>(
     const [ result, setResult ] = useState<ValidationResult>([ true, null ]);
 
     useEffect(() => {
-        const requiredValidation = validateIsRequired(value);
+        const requiredValidation = validateIsRequired(value, typeof required === "string" ? required : undefined);
         let newResult: ValidationResult = [ true, null ];
 
         if (typeof error === "string") {
@@ -184,7 +184,7 @@ export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Ele
         <Label name={props.name} label={labelWithDate} />
         <div className="flex-row">
             {notNullValue !== null && <Checkbox
-                label={label}
+                label={""}
                 name={props.name}
                 value={false}
                 onChange={() => setValue(null)}
@@ -326,11 +326,13 @@ export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSel
 
     const [ isValid, message ] = useValidation(props);
 
+    const indexValue = options.reduce((i, o, index) => isEqual(o.value, value) ? index : i, -1);
+
     return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
         <div className="flex-row">
             <select
-                value={String(options.reduce((i, o, index) => isEqual(o.value, value) ? index : i, -1))}
+                value={String(indexValue)}
                 onChange={e => {
                     const index = parseInt(e.target.value);
                     if (index > -1 && index < options.length)
@@ -380,8 +382,10 @@ function Checkbox(
 // -------------- Special inputs --------------
 
 export type InputArrayItemChildren<T extends Value> = {
-    Input: T extends ValueObject ? InputsObject<T> : Input<T>,
-    item: T,
+    Input: T extends ValueObject ? InputsObjectSelectable<T> : Input<T>,
+    value: T,
+    valueBefore: null | T,
+    values: T[],
     index: number,
     isFirst: boolean,
     isLast: boolean,
@@ -421,16 +425,22 @@ export function InputArray<T extends Value>(props: FormInputProps<T[]> & InputAr
         setValues(values.filter(v => v !== value));
     }, [ setValues, values ]);
 
+    let valueBefore: null | T = null;
+
     return <TypeFormContext.Provider value={{ values, setValue, errors, setError }}>
         {values.map((item, index) => {
             const itemArrayChildren: Omit<InputArrayItemChildren<T>, "Input"> = {
-                item,
+                value: item,
+                valueBefore,
+                values,
                 index,
                 isFirst: index === 0,
                 isLast: index === values.length - 1,
                 onAdd,
                 onRemove: () => onRemove(item),
             };
+
+            valueBefore = item;
 
             if (isObjectValue(item)) {
                 const Input = Inputs[index] as InputObjectType<ValueObject>;
@@ -454,7 +464,7 @@ function isObjectValue(value: Value): value is ValueObject {
 
 export type InputObjectProps<T extends ValueObject> = {
     children: (inputObjectChildren: {
-        Input: InputsObject<T>,
+        Input: InputsObjectSelectable<T>,
         values: T,
     }) => JSX.Element,
 }
@@ -464,20 +474,21 @@ export function InputObject<T extends ValueObject>(props: FormInputProps<T> & In
 
     const names = Object.keys(values);
 
-    // keep reference of input names
-    const Input = useMemo(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const Input: any = {};
-        names.forEach(name => Input[capitalize(name)] = getInput(name));
-        return Input;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ JSON.stringify(names) ]);
+    const Input = useSelectableInputObject<T>(names);
 
     const setValue = useCallback((name, value) => {
-        setValues({ ...values, [name]: value });
+        if (name === NAME_EMPTY) {
+            setValues(value);
+        } else {
+            setValues({ ...values, [name]: value });
+        }
     }, [ setValues, values ]);
     const setError = useCallback((name, error) => {
-        setErrors({ ...errors, [name]: error });
+        if (name === NAME_EMPTY) {
+            setErrors(error);
+        } else {
+            setErrors({ ...errors, [name]: error });
+        }
     }, [ setErrors, errors ]);
 
     return <TypeFormContext.Provider value={{ values, setValue, errors, setError }}>

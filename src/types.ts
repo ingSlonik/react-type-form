@@ -32,6 +32,9 @@ export type InputObjectType<T extends ValueObject> = InputSelectable<T, InputObj
 export type InputsObject<T extends ValueObject> = {
     [N in keyof T as Capitalize<string & N>]: Input<T[N]>
 };
+export type InputsObjectSelectable<T extends ValueObject> = {
+    Select: InputSelectType<T>,
+} & InputsObject<T>;
 
 // Validation
 
