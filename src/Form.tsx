@@ -1,9 +1,9 @@
 import React from "react";
 import isEqual from "lodash/isEqual";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { TypeFormContext } from "./context";
-import { capitalize, getInput } from "./unsafe";
+import { useInputsObject } from "./unsafe";
 
 import { InputsObject, Value, ValueObject, ErrorObject, ErrorValue, ErrorArray } from "./types";
 
@@ -44,14 +44,7 @@ export function Form<T extends ValueObject, M = string>(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ JSON.stringify(initialValues) ]);
 
-    // keep reference of input names
-    const Input = useMemo(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const Input: any = {};
-        names.forEach(name => Input[capitalize(name)] = getInput(name));
-        return Input;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ JSON.stringify(names) ]);
+    const Input = useInputsObject<T>(names);
 
     const setValue = useCallback(async (name: keyof T, value: Value) => {
         const newValues = { ...values, [name]: value };
@@ -76,9 +69,25 @@ export function Form<T extends ValueObject, M = string>(
     }, []);
 
     const onSubmitCallback = useCallback(async () => {
+        if (onValidate) {
+            const validation = await onValidate(values);
+            if (validation !== true) {
+                if (typeof validation === "string") {
+                    setMessage(typeof validation === "string" ? validation : null);
+                } else {
+                    setState(state => ({ ...state, errors: validation }));
+                }
+                return;
+            }
+        }
+
+        if (!isValid) {
+            return;
+        }
+
         const message = await onSubmit(values);
         setMessage(message);
-    }, [ onSubmit, values ]);
+    }, [ isValid, onSubmit, values, onValidate ]);
 
     return <TypeFormContext.Provider value={{ values, setValue, errors, setError }}>
         {children({
