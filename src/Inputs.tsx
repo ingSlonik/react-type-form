@@ -24,6 +24,7 @@ type InputAllProps<T extends Value> = {
     notNullValue?: Value,
     style?: CSSProperties,
     onValidate?: OnValidate<T>,
+    onChange?: (value: T) => void,
 };
 
 const inputAllDefaultProps = {
@@ -71,7 +72,7 @@ function useValidation<T extends Value>(
             newResult = [ false, error ];
         } else if (error === false) {
             newResult = [ false, null ];
-        } else if (required === true && requiredValidation !== true) {
+        } else if (required && requiredValidation !== true) {
             newResult = [ false, typeof requiredValidation === "string" ? requiredValidation : null ];
         } else if (onValidate || inputValidation) {
             (async () => {
@@ -115,7 +116,7 @@ InputString.defaultProps = {
 };
 
 export function InputString(props: FormInputProps<string> & InputStringProps): JSX.Element {
-    const { placeholder, value, setValue, readOnly, type, style, onEnter } = props;
+    const { placeholder, value, setValue, readOnly, type, style, onChange, onEnter } = props;
 
     const validationString = useCallback(async (value: string) => {
         if (type === "mail") return validateMail(value);
@@ -132,7 +133,11 @@ export function InputString(props: FormInputProps<string> & InputStringProps): J
             style={style}
             readOnly={readOnly || false}
             value={value}
-            onChange={e => setValue(e.target.value)}
+            onChange={e => {
+                const value = e.target.value;
+                setValue(value);
+                onChange && onChange(value);
+            }}
             onKeyPress={e => {
                 if (onEnter && e.key === "Enter")
                     onEnter();
@@ -142,7 +147,11 @@ export function InputString(props: FormInputProps<string> & InputStringProps): J
             placeholder={placeholder}
             readOnly={readOnly || false}
             value={value}
-            onChange={e => setValue(e.target.value)}
+            onChange={e => {
+                const value = e.target.value;
+                setValue(value);
+                onChange && onChange(value);
+            }}
             onKeyPress={e => {
                 if (onEnter && e.key === "Enter")
                     onEnter();
@@ -164,7 +173,7 @@ InputDate.defaultProps = {
 };
 
 export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Element {
-    const { value, setValue, label, style, readOnly, notNullValue, formatRead, formatWrite } = props;
+    const { value, setValue, style, readOnly, notNullValue, formatRead, formatWrite, onChange } = props;
 
     const validationDate = useCallback(async (value: Date) => validateDate(value), [ ]);
 
@@ -200,6 +209,7 @@ export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Ele
                     const date = moment(e.target.value, formatWrite, true);
                     if (date.isValid()) {
                         setValue(date.toDate());
+                        onChange && onChange(date.toDate());
                     } else {
                         // Set back default value
                         setValueString(moment(value).format(formatWrite));
@@ -226,7 +236,7 @@ InputNumber.defaultProps = {
 };
 
 export function InputNumber(props: FormInputProps<number> & InputNumberProps): JSX.Element {
-    const { placeholder, value, setValue, readOnly, type, style, min, max } = props;
+    const { placeholder, value, setValue, readOnly, type, style, min, max, onChange } = props;
 
     const validationNumber = useCallback(async (value: number) => {
         let error: ErrorValue<number> = true;
@@ -276,6 +286,7 @@ export function InputNumber(props: FormInputProps<number> & InputNumberProps): J
                     // Written value is valid number
                     setStringValue(e.target.value);
                     setValue(value);
+                    onChange && onChange(value);
                 } else {
                     // For a case "-" or "0."
                     setStringValue(e.target.value);
@@ -285,6 +296,7 @@ export function InputNumber(props: FormInputProps<number> & InputNumberProps): J
                 const value = getValueFromString(e.target.value);
                 setStringValue(String(value));
                 setValue(value);
+                onChange && onChange(value);
             }}
         />
         {message && <div className="message">{message}</div>}
@@ -299,13 +311,16 @@ InputBoolean.defaultProps = {
 };
 
 export function InputBoolean(props: FormInputProps<boolean> & InputBooleanProps): JSX.Element {
-    const { value, setValue, label, style } = props;
+    const { value, setValue, label, style, onChange } = props;
 
     const [ isValid, message ] = useValidation(props);
 
     return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <div className="flex-row">
-            <Checkbox label={label} name={props.name} value={value} onChange={setValue} />
+            <Checkbox label={label} name={props.name} value={value} onChange={value => {
+                setValue(value);
+                onChange && onChange(value);
+            }} />
         </div>
         {message && <div className="message">{message}</div>}
     </div>;
@@ -322,7 +337,7 @@ InputSelect.defaultProps = {
 };
 
 export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSelectProps<T>): JSX.Element {
-    const { value, setValue, options, style, placeholder } = props;
+    const { value, setValue, options, style, placeholder, onChange } = props;
 
     const [ isValid, message ] = useValidation(props);
 
@@ -335,8 +350,11 @@ export function InputSelect<T extends Value>(props: FormInputProps<T> & InputSel
                 value={String(indexValue)}
                 onChange={e => {
                     const index = parseInt(e.target.value);
-                    if (index > -1 && index < options.length)
-                        setValue(options[index].value);
+                    if (index > -1 && index < options.length) {
+                        const value = options[index].value;
+                        setValue(value);
+                        onChange && onChange(value);
+                    }
                 }}
             >
                 <option value={String(-1)} disabled>{placeholder}</option>
