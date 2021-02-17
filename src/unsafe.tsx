@@ -1,16 +1,18 @@
+// These functions save to be written and tested really carefully and cannot go to a user
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
-
-// These functions save to be written really carefully and cannot go to user
-
-import { useCallback, useContext } from "react";
+import React, { useMemo, useCallback, useContext } from "react";
 import { TypeFormContext } from "./context";
 
 import {
     InputObject, InputArray, InputBoolean, InputDate, InputNull, InputNumber, InputSelect, InputString,
 } from "./Inputs";
 
-import { FormInputProps, Input, Value, ErrorValue } from "./types";
+import {
+    FormInputProps, Input, InputsObject, InputsObjectSelectable, Value, ValueObject, ErrorValue,
+} from "./types";
+
+export const NAME_EMPTY = "_typeSafeFormEmptyNameForObjectInputSelect";
 
 export function getInput<T extends Value>(name: string): Input<T> {
     const Input: any = (props: any) => <InputRouter
@@ -30,6 +32,36 @@ export function getInput<T extends Value>(name: string): Input<T> {
     return Input;
 }
 
+export function useInputsObject<T extends ValueObject>(names: string[]): InputsObject<T> {
+    // keep reference of input names
+    return useMemo(() => {
+        const Input: any = {};
+        names.forEach(name => Input[capitalize(name)] = getInput(name));
+        return Input;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ JSON.stringify(names) ]);
+}
+
+export function useSelectableInputObject<T extends ValueObject>(names: string[]): InputsObjectSelectable<T> {
+    // keep reference of input names
+    return useMemo(() => {
+        const Input: any = {};
+        names.forEach(name => Input[capitalize(name)] = getInput(name));
+
+        if (names.indexOf("select") === -1) {
+            // eslint-disable-next-line react/display-name
+            Input.Select = (props: any) => <InputRouter
+                inputType="select"
+                name={NAME_EMPTY}
+                {...props}
+            />;
+        }
+
+        return Input;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ JSON.stringify(names) ]);
+}
+
 function useFormField<T extends Value>(
     { name }: { name: string },
 ): { value: T, setValue: (value: T | null) => void, error: ErrorValue<T>, setError: (error: ErrorValue<T>) => void } {
@@ -44,8 +76,8 @@ function useFormField<T extends Value>(
         [ name, setError ],
     );
 
-    const value = (values as any)[name] as T;
-    const error = (errors as any)[name] as ErrorValue<T>;
+    const value = name === NAME_EMPTY ? values as T : (values as any)[name] as T;
+    const error = name === NAME_EMPTY ? errors : (errors as any)?.[name];
 
     return { value, setValue: setValueWithoutName, error, setError: setErrorWithoutName };
 }
