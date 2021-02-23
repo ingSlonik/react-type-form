@@ -6,7 +6,7 @@ export function validateIsRequired(value: Value, message = "Required."): boolean
     if (value === null || value === false || value === "" || value === 0) {
         return message;
     } else {
-        return true;
+        return false;
     }
 }
 
@@ -14,7 +14,7 @@ export function validateInt(value: null | number, message = "The number has to b
     if (!Number.isInteger(value)) {
         return message;
     } else {
-        return true;
+        return false;
     }
 }
 
@@ -26,7 +26,7 @@ export function validateMin(value: null | number, min: number, message?: string)
             return `Value has to be minimum ${min}.`;
         }
     } else {
-        return true;
+        return false;
     }
 }
 
@@ -38,7 +38,7 @@ export function validateMax(value: null | number, max: number, message?: string)
             return `Value has to be maximum ${max}.`;
         }
     } else {
-        return true;
+        return false;
     }
 }
 
@@ -46,7 +46,7 @@ export function validateDate(value: null | Date, message = "The date in not vali
     if (value === null || isNaN(value.getTime())) {
         return message;
     } else {
-        return true;
+        return false;
     }
 }
 
@@ -56,7 +56,7 @@ export function validateDateString(
     if (!moment(value, format, true).isValid()) {
         return message;
     } else {
-        return true;
+        return false;
     }
 }
 

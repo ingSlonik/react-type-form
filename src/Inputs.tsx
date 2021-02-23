@@ -1,31 +1,20 @@
-import React, { CSSProperties, Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 import moment from "moment";
 import isEqual from "lodash/isEqual";
 
+import { useValidation } from "./services";
 import { TypeFormContext } from "./context";
 import { NAME_EMPTY, getInput, useSelectableInputObject } from "./unsafe";
 
 import {
-    validateDate, validateDateString, validateInt, validateIsRequired, validateMail, validateMax, validateMin,
+    validateDate, validateDateString, validateInt, validateMail, validateMax, validateMin,
 } from "./validations";
 
 import {
     FormInputProps, Input, InputObjectType, Value, ValueObject,
-    ErrorValue, ErrorArray, InputsObjectSelectable,
+    ErrorValue, InputsObjectSelectable, InputAllProps,
 } from "./types";
-
-type OnValidate<T extends Value> = (value: T | null) => Promise<ErrorValue<T>>;
-
-type InputAllProps<T extends Value> = {
-    label?: string,
-    required?: boolean | string,
-    readOnly?: boolean,
-    notNullValue?: Value,
-    style?: CSSProperties,
-    onValidate?: OnValidate<T>,
-    onChange?: (value: T) => void,
-};
 
 const inputAllDefaultProps = {
     style: {},
@@ -53,54 +42,6 @@ function Label({ label, name }: { label?: string, name: string }) {
     } else {
         return <label>{label}</label>;
     }
-}
-
-type ValidationResult = [ isValid: boolean, message: null | string ];
-
-function useValidation<T extends Value>(
-    props: { value: T } & FormInputProps<T> & InputAllProps<T>,
-    inputValidation?: OnValidate<T>,
-): ValidationResult {
-    const { value, required, error, setError, onValidate } = props;
-    const [ result, setResult ] = useState<ValidationResult>([ true, null ]);
-
-    useEffect(() => {
-        const requiredValidation = validateIsRequired(value, typeof required === "string" ? required : undefined);
-        let newResult: ValidationResult = [ true, null ];
-
-        if (typeof error === "string") {
-            newResult = [ false, error ];
-        } else if (error === false) {
-            newResult = [ false, null ];
-        } else if (required && requiredValidation !== true) {
-            newResult = [ false, typeof requiredValidation === "string" ? requiredValidation : null ];
-        } else if (onValidate || inputValidation) {
-            (async () => {
-                if (onValidate) {
-                    const onValidateError = await onValidate(value);
-                    if (onValidateError === true) {
-                        if (inputValidation) {
-                            const inputValidationError = await inputValidation(value);
-                            if (inputValidationError !== error)
-                                setError(inputValidationError);
-                        } else {
-                            if (onValidateError !== error)
-                                setError(onValidateError);
-                        }
-                    } else {
-                        if (onValidateError !== error)
-                            setError(onValidateError);
-                    }
-                }
-            })();
-        }
-
-        if (newResult[0] !== result[0] || newResult[1] !== result[1]) {
-            setResult(newResult);
-        }
-    }, [ value, result, required, error, onValidate, setError, inputValidation ]);
-
-    return result;
 }
 
 export type InputStringProps = InputAllProps<string> & {
@@ -183,7 +124,7 @@ export function InputDate(props: FormInputProps<Date> & InputDateProps): JSX.Ele
 
     useEffect(() => setValueString(moment(value).format(formatWrite)), [ value, formatWrite ]);
 
-    const isValidString = validateDateString(valueString, formatWrite || InputDate.defaultProps.formatWrite) === true;
+    const isValidString = validateDateString(valueString, formatWrite || InputDate.defaultProps.formatWrite) === false;
 
     const labelWithDate = `${
         props.label || getLabelFromName(props.name)
@@ -418,7 +359,8 @@ export type InputArrayProps<T extends Value> = {
 export function InputArray<T extends Value>(props: FormInputProps<T[]> & InputArrayProps<T>): JSX.Element {
     const { value: values, setValue: setValues, error, setError: setErrors } = props;
 
-    const errors = useMemo(() => Array.isArray(error) ? error : [], [ error ]) as ErrorArray<T>;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const errors = useMemo(() => Array.isArray(error) ? error : [], [ JSON.stringify(error) ]) as ErrorValue<T>[];
 
     const valuesLength = values.length;
     const Inputs = useMemo(() => {
@@ -505,7 +447,13 @@ export function InputObject<T extends ValueObject>(props: FormInputProps<T> & In
         if (name === NAME_EMPTY) {
             setErrors(error);
         } else {
-            setErrors({ ...errors, [name]: error });
+            // error can by boolean or string from Select option
+            if (typeof errors === "object") {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setErrors({ ...(errors as any), [name]: error });
+            } else {
+                setErrors({ [name]: error } as ErrorValue<T>);
+            }
         }
     }, [ setErrors, errors ]);
 

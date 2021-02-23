@@ -2,38 +2,41 @@ import React from "react";
 import isEqual from "lodash/isEqual";
 import { useCallback, useEffect, useState } from "react";
 
+import { getIsValidFromErrors } from "./services";
 import { TypeFormContext } from "./context";
 import { useInputsObject } from "./unsafe";
 
-import { InputsObject, Value, ValueObject, ErrorObject, ErrorValue, ErrorArray } from "./types";
+import { InputsObject, Value, ValueObject, ErrorObject, ErrorValue } from "./types";
 
-type FormChildren<T extends ValueObject, M> = {
+type Message = string;
+
+type FormChildren<T extends ValueObject> = {
     Input: InputsObject<T>,
     values: T,
-    message: null | M,
+    message: null | Message,
     isValid: boolean,
     // similar as `dirty` from `formik`
     isChanged: boolean,
     onSubmit: () => void,
 }
 
-type FormProps<T extends ValueObject, M> = {
+type FormProps<T extends ValueObject> = {
     initialValues: T,
-    onValidate?: (values: T) => Promise<true | M | ErrorObject<T>>,
-    onSubmit: (values: T) => Promise<null | M>,
-    children: (formChildren: FormChildren<T, M>) => JSX.Element,
+    onValidate?: (values: T) => Promise<true | Message | ErrorObject<T>>,
+    onSubmit: (values: T) => Promise<null | Message>,
+    children: (formChildren: FormChildren<T>) => JSX.Element,
 }
 
 Form.defaultProps = {};
 
-export function Form<T extends ValueObject, M = string>(
-    { initialValues, children, onValidate, onSubmit }: FormProps<T, M>,
+export function Form<T extends ValueObject>(
+    { initialValues, children, onValidate, onSubmit }: FormProps<T>,
 ): JSX.Element {
     const [ { values, errors }, setState ] = useState<{ values: T, errors: ErrorObject<T> }>({
         values: initialValues,
         errors: { },
     });
-    const [ message, setMessage ] = useState<null | M>(null);
+    const [ message, setMessage ] = useState<null | Message>(null);
 
     const isValid = getIsValidFromErrors(errors);
     const names = Object.keys(values);
@@ -64,7 +67,10 @@ export function Form<T extends ValueObject, M = string>(
     }, [ values, onValidate ]);
 
     const setError = useCallback((name: keyof T, error: ErrorValue<T[keyof T]>) => {
-        setState(state => ({ ...state, errors: { ...state.errors, [name]: error } }));
+        setState(state => ({
+            ...state,
+            errors: { ...state.errors, [name]: error },
+        }));
         setMessage(null);
     }, []);
 
@@ -99,29 +105,4 @@ export function Form<T extends ValueObject, M = string>(
             onSubmit: onSubmitCallback,
         })}
     </TypeFormContext.Provider>;
-}
-
-function getIsValidFromErrors<T extends Value>(
-    error: ErrorValue<T> | ErrorArray<T> | ErrorObject<ValueObject>,
-): boolean {
-    if (typeof error === "undefined" || error === true) {
-        return true;
-    } else if (typeof error === "string" || error === false) {
-        return false;
-    } else if (Array.isArray(error)) {
-        for (const e of error) {
-            if (!getIsValidFromErrors(e)) {
-                return false;
-            }
-        }
-    } else if (typeof error === "object" && error !== null) {
-        const err = error as ErrorObject<ValueObject>;
-        for (const key in err) {
-            if (!getIsValidFromErrors(err[key])) {
-                return false;
-            }
-        }
-    }
-
-    return true;
 }

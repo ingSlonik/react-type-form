@@ -50,7 +50,14 @@ function ValidationExample() {
                             <>
                                 {isFirst && <button onClick={() => onAdd("NEW")}>Add equipment</button>}
                                 <button onClick={onRemove}>Remove equipment</button>
-                                <Input label="Equipment" />
+                                <Input.Select label="Equipment" options={[
+                                    { value: "Bread", text: "Bread" },
+                                    { value: "Bread 2", text: "Bread 2" },
+                                    { value: "Bread 3", text: "Bread 3" },
+
+                                ]}
+                                onValidate={async v => v === "Bread"}
+                                />
                             </>
                         )}
                     </Input.Equipment>

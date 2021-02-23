@@ -1,10 +1,11 @@
+import { CSSProperties } from "react";
 import {
     InputBooleanProps, InputDateProps, InputNumberProps, InputSelectProps, InputStringProps,
     InputArrayProps, InputObjectProps,
 } from "./Inputs";
 
 
-export type Value = null | boolean | number | string | Date | Array<Value> | ValueObject;
+export type Value = null | boolean | number | string | Date | Value[] | ValueObject;
 export type ValueObject = { [name: string]: Value };
 
 export type Input<T extends Value> =
@@ -44,12 +45,15 @@ export type InputsObjectSelectable<T extends ValueObject> = {
  * `string` is error with message
  */
 export type ErrorValue<T extends Value> =
-    T extends Value[] ? ErrorArray<T[number]> :
-    T extends ValueObject ? ErrorObject<T> :
+    T extends Value[] ? ErrorArray<T[number]> | undefined :
+    T extends ValueObject ? ErrorObject<T> | undefined | boolean | string :
     undefined | boolean | string;
 
 export type ErrorArray<T extends Value> = ErrorValue<T>[];
+// boolean | string for Select whole object
 export type ErrorObject<T extends ValueObject> = { [N in keyof T]?: ErrorValue<T[N]> };
+
+export type OnValidate<T extends Value> = (value: T | null) => Promise<ErrorValue<T>>;
 
 // Inputs
 
@@ -58,5 +62,15 @@ export type FormInputProps<T extends Value> = {
     value: T,
     setValue: (value: T | null) => void,
     error: ErrorValue<T>,
-    setError: (valid: ErrorValue<T>) => void,
+    setError: (valid?: ErrorValue<T>) => void,
+};
+
+export type InputAllProps<T extends Value> = {
+    label?: string,
+    required?: boolean | string,
+    readOnly?: boolean,
+    notNullValue?: Value,
+    style?: CSSProperties,
+    onValidate?: OnValidate<T>,
+    onChange?: (value: T) => void,
 };

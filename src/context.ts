@@ -1,10 +1,10 @@
 import { createContext } from "react";
-import { Value, ValueObject, ErrorObject, ErrorValue, ErrorArray } from "./types";
+import { Value, ValueObject, ErrorValue } from "./types";
 
 type TypeFormContextType = {
     values: ValueObject | Value[],
     setValue: (name: string, value: Value) => void,
-    errors: ErrorObject<ValueObject> | ErrorArray<Value>,
+    errors: ErrorValue<Value>,
     setError: (name: string, error: ErrorValue<Value>) => void,
 };
 
