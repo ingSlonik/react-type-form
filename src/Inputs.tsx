@@ -5,7 +5,7 @@ import isEqual from "lodash/isEqual";
 
 import { useValidation } from "./services";
 import { TypeFormContext } from "./context";
-import { NAME_EMPTY, getInput, useSelectableInputObject } from "./unsafe";
+import { NAME_EMPTY, getInput, useExtendedInputObject } from "./unsafe";
 
 import {
     validateDate, validateDateString, validateInt, validateMail, validateMax, validateMin,
@@ -13,7 +13,7 @@ import {
 
 import {
     FormInputProps, Input, InputObjectType, Value, ValueObject,
-    ErrorValue, InputsObjectSelectable, InputAllProps,
+    ErrorValue, InputsObjectSelectable, InputAllProps, InputsObjectExtended,
 } from "./types";
 
 const inputAllDefaultProps = {
@@ -267,6 +267,57 @@ export function InputBoolean(props: FormInputProps<boolean> & InputBooleanProps)
     </div>;
 }
 
+
+export type InputFileProps<T extends Value> = InputAllProps<T> & {
+    accept?: string,
+    multiple?: boolean,
+    onFiles: (files: File[]) => Promise<T>,
+    renderValue?: (value: T) => JSX.Element,
+}
+
+InputSelect.defaultProps = {
+    ...inputAllDefaultProps,
+    multiple: false,
+};
+
+export function InputFile<T extends Value>(props: FormInputProps<T> & InputFileProps<T>): JSX.Element {
+    const { value, setValue, multiple, accept, style, readOnly, renderValue, onChange, onFiles } = props;
+
+    const [ isValid, message ] = useValidation(props);
+
+    return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
+        <Label {...props} />
+        {renderValue && renderValue(value)}
+        <input
+            type={"file"}
+            style={style}
+            readOnly={readOnly || false}
+            accept={accept}
+            multiple={multiple}
+            onChange={async e => {
+                const fileList = e.target.files;
+                if (fileList) {
+                    const files = [];
+
+                    for (let i = 0; i < fileList.length; i++) {
+                        const file = fileList.item(i);
+                        if (file) {
+                            files.push(file);
+                        }
+                    }
+                    if (files.length > 0) {
+                        const value = await onFiles(files);
+                        setValue(value);
+                        onChange && onChange(value);
+                    }
+                }
+            }}
+        />
+        {message && <div className="message">{message}</div>}
+    </div>;
+}
+
+
 export type InputSelectProps<T extends Value> = InputAllProps<T> & {
     options: Array<{ value: T, text: string }>,
     placeholder?: string,
@@ -424,7 +475,7 @@ function isObjectValue(value: Value): value is ValueObject {
 
 export type InputObjectProps<T extends ValueObject> = {
     children: (inputObjectChildren: {
-        Input: InputsObjectSelectable<T>,
+        Input: InputsObjectExtended<T>,
         values: T,
     }) => JSX.Element,
 }
@@ -434,7 +485,7 @@ export function InputObject<T extends ValueObject>(props: FormInputProps<T> & In
 
     const names = Object.keys(values);
 
-    const Input = useSelectableInputObject<T>(names);
+    const Input = useExtendedInputObject<T>(names);
 
     const setValue = useCallback((name, value) => {
         if (name === NAME_EMPTY) {

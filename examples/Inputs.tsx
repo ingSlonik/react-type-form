@@ -11,6 +11,9 @@ function InputsExample() {
             initialValues={{
                 name: "",
                 age: 25,
+                photo: {
+                    url: "",
+                },
                 date: new Date(),
                 car: "A1",
                 equipment: [ "Bread" ],
@@ -25,6 +28,12 @@ function InputsExample() {
                 <>
                     <Input.Name />
                     <Input.Age min={18} />
+                    <Input.Photo.File
+                        renderValue={value => <img style={{ height: "150px" }} src={value.url} />}
+                        onFiles={async files => {
+                            return { url: await toBase64(files[0]) };
+                        }}
+                    />
                     <Input.Date />
                     <Input.Car.Select options={[
                         { value: "A1", text: "Škoda" },
@@ -54,3 +63,12 @@ function InputsExample() {
 }
 
 render(<InputsExample />, document.body);
+
+function toBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = error => reject(error);
+    });
+}

@@ -5,11 +5,12 @@ import React, { useMemo, useCallback, useContext } from "react";
 import { TypeFormContext } from "./context";
 
 import {
-    InputObject, InputArray, InputBoolean, InputDate, InputNull, InputNumber, InputSelect, InputString,
+    InputObject, InputArray, InputBoolean, InputDate, InputNull, InputNumber, InputSelect, InputString, InputFile,
 } from "./Inputs";
 
 import {
-    FormInputProps, Input, InputsObject, InputsObjectSelectable, Value, ValueObject, ErrorValue,
+    FormInputProps, Input, InputsObject, InputsObjectSelectable, InputsObjectExtended,
+    Value, ValueObject, ErrorValue,
 } from "./types";
 
 export const NAME_EMPTY = "_typeSafeFormEmptyNameForObjectInputSelect";
@@ -23,6 +24,12 @@ export function getInput<T extends Value>(name: string): Input<T> {
     // eslint-disable-next-line react/display-name
     Input.Select = (props: any) => <InputRouter
         inputType="select"
+        name={name}
+        {...props}
+    />;
+    // eslint-disable-next-line react/display-name
+    Input.File = (props: any) => <InputRouter
+        inputType="file"
         name={name}
         {...props}
     />;
@@ -62,6 +69,35 @@ export function useSelectableInputObject<T extends ValueObject>(names: string[])
     }, [ JSON.stringify(names) ]);
 }
 
+export function useExtendedInputObject<T extends ValueObject>(names: string[]): InputsObjectExtended<T> {
+    // keep reference of input names
+    return useMemo(() => {
+        const Input: any = {};
+        names.forEach(name => Input[capitalize(name)] = getInput(name));
+
+        if (names.indexOf("select") === -1) {
+            // eslint-disable-next-line react/display-name
+            Input.Select = (props: any) => <InputRouter
+                inputType="select"
+                name={NAME_EMPTY}
+                {...props}
+            />;
+        }
+
+        if (names.indexOf("file") === -1) {
+            // eslint-disable-next-line react/display-name
+            Input.File = (props: any) => <InputRouter
+                inputType="file"
+                name={NAME_EMPTY}
+                {...props}
+            />;
+        }
+
+        return Input;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ JSON.stringify(names) ]);
+}
+
 function useFormField<T extends Value>(
     { name }: { name: string },
 ): { value: T, setValue: (value: T | null) => void, error: ErrorValue<T>, setError: (error: ErrorValue<T>) => void } {
@@ -83,7 +119,7 @@ function useFormField<T extends Value>(
 }
 
 export type InputRouterProps<T extends Value, InputProps> = FormInputProps<T> & InputProps & {
-    inputType: "input" | "select" | "custom"
+    inputType: "input" | "select" | "file" | "custom"
 }
 
 export function InputRouter<T extends Value, InputProps>(
@@ -96,6 +132,8 @@ export function InputRouter<T extends Value, InputProps>(
 
     if (inputType === "select") {
         Input = InputSelect;
+    } else if (inputType === "file") {
+        Input = InputFile;
     } else if (inputType === "custom") {
         // TODO: next version
         throw new Error("Custom inputs are not implemented.");

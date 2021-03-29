@@ -1,7 +1,7 @@
 import { CSSProperties } from "react";
 import {
     InputBooleanProps, InputDateProps, InputNumberProps, InputSelectProps, InputStringProps,
-    InputArrayProps, InputObjectProps,
+    InputArrayProps, InputObjectProps, InputFileProps,
 } from "./Inputs";
 
 
@@ -21,20 +21,31 @@ interface InputSelectable<T extends Value, Props extends Record<string, unknown>
     Select: InputSelectType<T>;
 }
 
+interface InputExtended<T extends Value, Props extends Record<string, unknown>> {
+    (props: Props): JSX.Element;
+    Select: InputSelectType<T>;
+    File: InputFileType<T>;
+}
+
 type InputSelectType<T extends Value> = (props: InputSelectProps<T>) => JSX.Element;
+type InputFileType<T extends Value> = (props: InputFileProps<T>) => JSX.Element;
 
 type InputStringType<T extends string | null> = InputSelectable<T, InputStringProps>;
 type InputNumberType<T extends number | null> = InputSelectable<T, InputNumberProps>;
 type InputBooleanType<T extends boolean | null> = InputSelectable<T, InputBooleanProps>;
 type InputDateType<T extends Date | null> = InputSelectable<T, InputDateProps>
 type InputArrayType<T extends Value> = InputSelectable<T, InputArrayProps<T>>;
-export type InputObjectType<T extends ValueObject> = InputSelectable<T, InputObjectProps<T>>;
+export type InputObjectType<T extends ValueObject> = InputExtended<T, InputObjectProps<T>>;
 
 export type InputsObject<T extends ValueObject> = {
     [N in keyof T as Capitalize<string & N>]: Input<T[N]>
 };
 export type InputsObjectSelectable<T extends ValueObject> = {
     Select: InputSelectType<T>,
+} & InputsObject<T>;
+export type InputsObjectExtended<T extends ValueObject> = {
+    Select: InputSelectType<T>,
+    File: InputFileType<T>;
 } & InputsObject<T>;
 
 // Validation
