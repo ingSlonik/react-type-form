@@ -50,7 +50,7 @@ export function useValidation<T extends Value>(
             newResult = [ false, error ];
         } else if (error === false) {
             newResult = [ false, null ];
-        } else if (required && requiredValidation !== true) {
+        } else if (required && requiredValidation !== false) {
             newResult = [ false, typeof requiredValidation === "string" ? requiredValidation : null ];
         } else if (onValidate || inputValidation) {
             (async () => {
