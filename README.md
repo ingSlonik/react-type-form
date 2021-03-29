@@ -67,6 +67,7 @@ function InputsExample() {
       initialValues={{
         name: "",
         age: 25,
+        photo: { url: "" },
         date: new Date(),
         equipment: ["Bread"],
         confirm: false,
@@ -80,6 +81,10 @@ function InputsExample() {
         <>
           <Input.Name />
           <Input.Age min={18} />
+          <Input.Photo.File
+              renderValue={value => <img style={{ height: "150px" }} src={value.url} />}
+              onFiles={async files => ({ url: await toBase64(files[0]) })}
+          />
           <Input.Date />
           <Input.Equipment>
             {({ Input, isFirst, onAdd, onRemove }) => (
@@ -156,6 +161,8 @@ All can be `nullable` or/and `select`.
 #### `date`
 
 #### `datetime`
+
+### File
 
 ### Array
 
