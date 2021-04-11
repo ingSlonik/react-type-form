@@ -272,7 +272,7 @@ export type InputFileProps<T extends Value> = InputAllProps<T> & {
     accept?: string,
     multiple?: boolean,
     onFiles: (files: File[]) => Promise<T>,
-    renderValue?: (value: T) => JSX.Element,
+    renderValue?: (value: T, onChange: (value: null | T) => void) => JSX.Element,
 }
 
 InputSelect.defaultProps = {
@@ -287,7 +287,7 @@ export function InputFile<T extends Value>(props: FormInputProps<T> & InputFileP
 
     return <div className={`type-form-input ${isValid ? "valid" : "not-valid"}`} style={style}>
         <Label {...props} />
-        {renderValue && renderValue(value)}
+        {renderValue && renderValue(value, setValue)}
         <input
             type={"file"}
             style={style}

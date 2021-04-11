@@ -17,6 +17,7 @@ type FormChildren<T extends ValueObject> = {
     isValid: boolean,
     // similar as `dirty` from `formik`
     isChanged: boolean,
+    onChange: (values: T) => void,
     onSubmit: () => void,
 }
 
@@ -74,6 +75,11 @@ export function Form<T extends ValueObject>(
         setMessage(null);
     }, []);
 
+    const onChangeCallback = useCallback((values: T) => {
+        setState(state => ({ ...state, values }));
+        setMessage(null);
+    }, []);
+
     const onSubmitCallback = useCallback(async () => {
         if (onValidate) {
             const validation = await onValidate(values);
@@ -102,6 +108,7 @@ export function Form<T extends ValueObject>(
             message,
             isValid,
             isChanged: !isEqual(initialValues, values),
+            onChange: onChangeCallback,
             onSubmit: onSubmitCallback,
         })}
     </TypeFormContext.Provider>;
